@@ -1,6 +1,9 @@
 package orderbook
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Order struct {
 	ID        int64
@@ -12,6 +15,10 @@ type Order struct {
 }
 
 type Orders []*Order
+
+func (order *Order) String() string {
+	return fmt.Sprintf("[sizeL %.2f]", order.Size)
+}
 
 func NewOrder(is_bid bool, size float64) *Order {
 	return &Order{
@@ -38,6 +45,17 @@ func (limit *Limit) AddOrder(order *Order) {
 	order.Limit = limit
 	limit.Orders = append(limit.Orders, order)
 	limit.Volume += order.Size
+}
+
+func (limit *Limit) DeleteOrder(order *Order) {
+	for i := 0; i < len(limit.Orders); i++ {
+		if limit.Orders[i] == order { // TODO: try to do it more efficient
+			limit.Orders[i] = limit.Orders[len(limit.Orders)-1]
+			limit.Orders = limit.Orders[:len(limit.Orders)-1]
+		}
+	}
+	order.Limit = nil
+	limit.Volume -= order.Size
 }
 
 type Orderbook struct {
