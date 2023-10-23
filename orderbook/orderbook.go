@@ -34,6 +34,12 @@ func NewLimit(price float64) *Limit {
 	}
 }
 
+func (limit *Limit) AddOrder(order *Order) {
+	order.Limit = limit
+	limit.Orders = append(limit.Orders, order)
+	limit.Volume += order.Size
+}
+
 type Orderbook struct {
 	Asks []*Limit
 	Bids []*Limit
