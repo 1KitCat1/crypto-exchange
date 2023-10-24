@@ -61,6 +61,18 @@ func (limit *Limit) DeleteOrder(order *Order) {
 type Orderbook struct {
 	Asks []*Limit
 	Bids []*Limit
+
+	AskLimits map[float64]*Limit
+	BidLimits map[float64]*Limit
+}
+
+func NewOrderbook() *Orderbook {
+	return &Orderbook{
+		Asks:      []*Limit{},
+		Bids:      []*Limit{},
+		AskLimits: make(map[float64]*Limit),
+		BidLimits: make(map[float64]*Limit),
+	}
 }
 
 func (o Orders) Len() int { return len(o) }
