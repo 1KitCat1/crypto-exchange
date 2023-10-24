@@ -48,6 +48,10 @@ func NewLimit(price float64) *Limit {
 	}
 }
 
+func (limit *Limit) String() string {
+	return fmt.Sprintf("[price: %.2f | volume: %.2f]", limit.Price, limit.Volume)
+}
+
 func (limit *Limit) AddOrder(order *Order) {
 	order.Limit = limit
 	limit.Orders = append(limit.Orders, order)
@@ -110,6 +114,8 @@ func (orderbook *Orderbook) add(price float64, order *Order) {
 			orderbook.AskLimits[price] = limit
 		}
 	}
+
+	limit.AddOrder(order)
 }
 
 func (o Orders) Len() int { return len(o) }
