@@ -5,11 +5,18 @@ import (
 	"time"
 )
 
+type Match struct {
+	Ask        *Order
+	Bid        *Order
+	SizeFilled float64
+	Price      float64
+}
+
 type Order struct {
 	ID        int64
 	UserID    int64
 	Size      float64
-	Bid       bool // limit or market
+	Bid       bool // bid or ask
 	Limit     *Limit
 	Timestamp int64
 }
@@ -72,6 +79,36 @@ func NewOrderbook() *Orderbook {
 		Bids:      []*Limit{},
 		AskLimits: make(map[float64]*Limit),
 		BidLimits: make(map[float64]*Limit),
+	}
+}
+
+func (orderbook *Orderbook) PlaceOrder(price float64, order *Order) []Match {
+	// TODO: implement matching orders
+	//
+	if order.Size > 0.0 {
+		orderbook.add(price, order)
+	}
+	return []Match{}
+}
+
+func (orderbook *Orderbook) add(price float64, order *Order) {
+	var limit *Limit
+
+	if order.Bid {
+		limit = orderbook.BidLimits[price]
+	} else {
+		limit = orderbook.AskLimits[price]
+	}
+
+	if limit == nil {
+		limit = NewLimit(price)
+		if order.Bid {
+			orderbook.Bids = append(orderbook.Bids, limit)
+			orderbook.BidLimits[price] = limit
+		} else {
+			orderbook.Asks = append(orderbook.Asks, limit)
+			orderbook.AskLimits[price] = limit
+		}
 	}
 }
 
