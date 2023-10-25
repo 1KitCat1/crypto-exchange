@@ -2,6 +2,7 @@ package orderbook
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -9,6 +10,12 @@ const (
 	BID = true
 	ASK = false
 )
+
+func assert(t *testing.T, a, b any) {
+	if !reflect.DeepEqual(a, b) {
+		t.Errorf("%+v != %+v", a, b)
+	}
+}
 
 func TestLimit(t *testing.T) {
 	limit := NewLimit(10_000)
@@ -32,15 +39,14 @@ func TestLimit(t *testing.T) {
 	fmt.Println(limit)
 }
 
-func TestOrderbook(t *testing.T) {
+func TestPlaceLimitOrder(t *testing.T) {
 	orderbook := NewOrderbook()
 
-	orderbook.PlaceOrder(34_000, NewOrder(BID, 10))
-	orderbook.PlaceOrder(34_000, NewOrder(BID, 100))
+	orderbook.PlaceLimitOrder(10_000, NewOrder(ASK, 10))
+	assert(t, len(orderbook.Asks), 1)
+	orderbook.PlaceLimitOrder(11_000, NewOrder(ASK, 15))
+	assert(t, len(orderbook.Asks), 2)
 
-	if orderbook.BidLimits[34_000].Volume != 100+10 {
-		t.Fail()
-	}
-
-	fmt.Println(orderbook.Bids)
+	orderbook.PlaceLimitOrder(9_000, NewOrder(BID, 8))
+	assert(t, len(orderbook.Bids), 1)
 }

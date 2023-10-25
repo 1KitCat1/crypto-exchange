@@ -23,7 +23,7 @@ type Order struct {
 
 type Orders []*Order
 
-// func (orders Orders) Len() int           { return len(orders) }
+func (orders Orders) Len() int           { return len(orders) }
 func (orders Orders) Swap(i, j int)      { orders[i], orders[j] = orders[j], orders[i] }
 func (orders Orders) Less(i, j int) bool { return orders[i].Timestamp < orders[j].Timestamp }
 
@@ -104,16 +104,7 @@ func NewOrderbook() *Orderbook {
 	}
 }
 
-func (orderbook *Orderbook) PlaceOrder(price float64, order *Order) []Match {
-	// TODO: implement matching orders
-	//
-	if order.Size > 0.0 {
-		orderbook.add(price, order)
-	}
-	return []Match{}
-}
-
-func (orderbook *Orderbook) add(price float64, order *Order) {
+func (orderbook *Orderbook) PlaceLimitOrder(price float64, order *Order) {
 	var limit *Limit
 
 	if order.Bid {
@@ -135,5 +126,3 @@ func (orderbook *Orderbook) add(price float64, order *Order) {
 
 	limit.AddOrder(order)
 }
-
-func (o Orders) Len() int { return len(o) }
