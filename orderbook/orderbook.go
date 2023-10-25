@@ -2,6 +2,7 @@ package orderbook
 
 import (
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -88,8 +89,8 @@ func (limit *Limit) DeleteOrder(order *Order) {
 }
 
 type Orderbook struct {
-	Asks []*Limit
-	Bids []*Limit
+	asks []*Limit
+	bids []*Limit
 
 	AskLimits map[float64]*Limit
 	BidLimits map[float64]*Limit
@@ -97,8 +98,8 @@ type Orderbook struct {
 
 func NewOrderbook() *Orderbook {
 	return &Orderbook{
-		Asks:      []*Limit{},
-		Bids:      []*Limit{},
+		asks:      []*Limit{},
+		bids:      []*Limit{},
 		AskLimits: make(map[float64]*Limit),
 		BidLimits: make(map[float64]*Limit),
 	}
@@ -116,13 +117,23 @@ func (orderbook *Orderbook) PlaceLimitOrder(price float64, order *Order) {
 	if limit == nil {
 		limit = NewLimit(price)
 		if order.Bid {
-			orderbook.Bids = append(orderbook.Bids, limit)
+			orderbook.bids = append(orderbook.bids, limit)
 			orderbook.BidLimits[price] = limit
 		} else {
-			orderbook.Asks = append(orderbook.Asks, limit)
+			orderbook.asks = append(orderbook.asks, limit)
 			orderbook.AskLimits[price] = limit
 		}
 	}
 
 	limit.AddOrder(order)
+}
+
+func (orderbook *Orderbook) Asks() []*Limit {
+	sort.Sort(ByBestAsk{orderbook.asks})
+	return orderbook.asks
+}
+
+func (orderbook *Orderbook) Bids() []*Limit {
+	sort.Sort(ByBestBid{orderbook.bids})
+	return orderbook.bids
 }
