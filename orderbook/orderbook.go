@@ -88,6 +88,49 @@ func (limit *Limit) DeleteOrder(order *Order) {
 	limit.Volume -= order.Size
 }
 
+func (limit *Limit) Fill(order *Order) []Match {
+	matches := []Match{}
+
+	for _, orderMatched := range limit.Orders {
+		match := limit.fillOrder(order, orderMatched)
+		matches = append(matches, match)
+	}
+	return matches
+}
+
+func (limit *Limit) fillOrder(firstOrder, secondOrder *Order) Match {
+	var (
+		bid    *Order
+		ask    *Order
+		filled float64
+	)
+
+	if firstOrder.Bid {
+		bid = firstOrder
+		ask = secondOrder
+	} else {
+		bid = secondOrder
+		ask = firstOrder
+	}
+
+	if firstOrder.Size >= secondOrder.Size {
+		firstOrder.Size -= secondOrder.Size
+		filled = secondOrder.Size
+		secondOrder.Size = 0
+	} else {
+		secondOrder.Size -= firstOrder.Size
+		filled = firstOrder.Size
+		firstOrder.Size = 0
+	}
+
+	return Match{
+		Bid:        bid,
+		Ask:        ask,
+		SizeFilled: filled,
+		Price:      limit.Price,
+	}
+}
+
 type Orderbook struct {
 	asks []*Limit
 	bids []*Limit
@@ -103,6 +146,21 @@ func NewOrderbook() *Orderbook {
 		AskLimits: make(map[float64]*Limit),
 		BidLimits: make(map[float64]*Limit),
 	}
+}
+
+func (orderbook *Orderbook) PlaceMarketOrder(order *Order) []Match {
+	matches := []Match{}
+
+	if order.Bid {
+		for _, limit := range orderbook.Asks() {
+			matches := limit.Fill(order)
+
+		}
+	} else {
+
+	}
+
+	return matches
 }
 
 func (orderbook *Orderbook) PlaceLimitOrder(price float64, order *Order) {
