@@ -43,10 +43,27 @@ func TestPlaceLimitOrder(t *testing.T) {
 	orderbook := NewOrderbook()
 
 	orderbook.PlaceLimitOrder(10_000, NewOrder(ASK, 10))
-	assert(t, len(orderbook.Asks), 1)
+	assert(t, len(orderbook.asks), 1)
 	orderbook.PlaceLimitOrder(11_000, NewOrder(ASK, 15))
-	assert(t, len(orderbook.Asks), 2)
+	assert(t, len(orderbook.asks), 2)
 
 	orderbook.PlaceLimitOrder(9_000, NewOrder(BID, 8))
-	assert(t, len(orderbook.Bids), 1)
+	assert(t, len(orderbook.bids), 1)
+}
+
+func TestPlaceMarketOrder(t *testing.T) {
+	orderbook := NewOrderbook()
+
+	sellOrder := NewOrder(ASK, 10)
+	orderbook.PlaceLimitOrder(100, sellOrder)
+
+	buyOrder := NewOrder(BID, 5)
+	matches := orderbook.PlaceMarketOrder(buyOrder)
+
+	assert(t, len(matches), 1)
+	assert(t, len(orderbook.asks), 1)
+	assert(t, orderbook.AsksTotalVolume(), 5.0)
+	assert(t, orderbook.BidTotalVolume(), 0.0)
+
+	fmt.Println(matches)
 }
