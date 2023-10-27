@@ -40,6 +40,10 @@ func NewOrder(is_bid bool, size float64) *Order {
 	}
 }
 
+func (order *Order) IsFilled() bool {
+	return order.Size == 0.0
+}
+
 type Limit struct { // group of orders at a certain price limit
 	Price  float64
 	Orders Orders
@@ -94,6 +98,8 @@ func (limit *Limit) Fill(order *Order) []Match {
 	for _, orderMatched := range limit.Orders {
 		match := limit.fillOrder(order, orderMatched)
 		matches = append(matches, match)
+
+		limit.Volume -= match.SizeFilled
 	}
 	return matches
 }
@@ -152,9 +158,12 @@ func (orderbook *Orderbook) PlaceMarketOrder(order *Order) []Match {
 	matches := []Match{}
 
 	if order.Bid {
+		if order.Size > orderbook.AsksTotalVolume() {
+			panic("Not enough volume in the orderbook")
+		}
 		for _, limit := range orderbook.Asks() {
-			matches := limit.Fill(order)
-
+			limitMatches := limit.Fill(order)
+			matches = append(matches, limitMatches...)
 		}
 	} else {
 
@@ -194,4 +203,24 @@ func (orderbook *Orderbook) Asks() []*Limit {
 func (orderbook *Orderbook) Bids() []*Limit {
 	sort.Sort(ByBestBid{orderbook.bids})
 	return orderbook.bids
+}
+
+func (orderbook *Orderbook) BidTotalVolume() float64 {
+	totalVolume := 0.0
+	// TODO: optimize
+	for i := 0; i < len(orderbook.bids); i++ {
+		totalVolume += orderbook.bids[i].Volume
+	}
+
+	return totalVolume
+}
+
+func (orderbook *Orderbook) AsksTotalVolume() float64 {
+	totalVolume := 0.0
+	// TODO: optimize
+	for i := 0; i < len(orderbook.asks); i++ {
+		totalVolume += orderbook.asks[i].Volume
+	}
+
+	return totalVolume
 }
