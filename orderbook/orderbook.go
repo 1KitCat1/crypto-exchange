@@ -62,7 +62,7 @@ type ByBestBid struct{ Limits }
 
 func (bid ByBestBid) Len() int           { return len(bid.Limits) }
 func (bid ByBestBid) Swap(i, j int)      { bid.Limits[i], bid.Limits[j] = bid.Limits[j], bid.Limits[i] }
-func (bid ByBestBid) Less(i, j int) bool { return bid.Limits[i].Price < bid.Limits[j].Price }
+func (bid ByBestBid) Less(i, j int) bool { return bid.Limits[i].Price > bid.Limits[j].Price }
 
 func NewLimit(price float64) *Limit {
 	return &Limit{
@@ -94,12 +94,25 @@ func (limit *Limit) DeleteOrder(order *Order) {
 
 func (limit *Limit) Fill(order *Order) []Match {
 	matches := []Match{}
+	filledOrders := []*Order{}
 
 	for _, orderMatched := range limit.Orders {
 		match := limit.fillOrder(order, orderMatched)
 		matches = append(matches, match)
 
 		limit.Volume -= match.SizeFilled
+
+		if orderMatched.IsFilled() {
+			filledOrders = append(filledOrders, orderMatched)
+		}
+
+		if order.IsFilled() {
+			break
+		}
+	}
+
+	for _, order := range filledOrders {
+		limit.DeleteOrder(order)
 	}
 	return matches
 }
@@ -166,7 +179,13 @@ func (orderbook *Orderbook) PlaceMarketOrder(order *Order) []Match {
 			matches = append(matches, limitMatches...)
 		}
 	} else {
-
+		if order.Size > orderbook.BidsTotalVolume() {
+			panic("Not enough volume in the orderbook")
+		}
+		for _, limit := range orderbook.Bids() {
+			limitMatches := limit.Fill(order)
+			matches = append(matches, limitMatches...)
+		}
 	}
 
 	return matches
@@ -205,7 +224,7 @@ func (orderbook *Orderbook) Bids() []*Limit {
 	return orderbook.bids
 }
 
-func (orderbook *Orderbook) BidTotalVolume() float64 {
+func (orderbook *Orderbook) BidsTotalVolume() float64 {
 	totalVolume := 0.0
 	// TODO: optimize
 	for i := 0; i < len(orderbook.bids); i++ {
