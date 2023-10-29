@@ -133,3 +133,17 @@ func TestPlaceMarketOrderOrderTiming(t *testing.T) {
 	fmt.Println(matches)
 
 }
+
+func TestCancelOrder(t *testing.T) {
+	orderbook := NewOrderbook()
+
+	order := NewOrder(BID, 10)
+	orderbook.PlaceLimitOrder(10_000, NewOrder(BID, 15))
+	orderbook.PlaceLimitOrder(9_000, order)
+
+	assert(t, len(orderbook.bids), 2)
+	assert(t, orderbook.BidsTotalVolume(), 25.0)
+	orderbook.CancelOrder(order)
+	assert(t, orderbook.BidsTotalVolume(), 15.0)
+	assert(t, len(orderbook.bids), 1)
+}
