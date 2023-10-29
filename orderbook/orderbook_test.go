@@ -92,3 +92,24 @@ func TestPlaceMarketOrderMultipleMatches(t *testing.T) {
 	fmt.Println(matches)
 
 }
+
+func TestPlaceMarketOrderMultipleOrdersOnLimit(t *testing.T) {
+	orderbook := NewOrderbook()
+
+	orderbook.PlaceLimitOrder(5_000, NewOrder(BID, 1))
+	orderbook.PlaceLimitOrder(5_000, NewOrder(BID, 10))
+	orderbook.PlaceLimitOrder(9_000, NewOrder(BID, 8))
+	orderbook.PlaceLimitOrder(10_000, NewOrder(BID, 5))
+
+	assert(t, orderbook.BidsTotalVolume(), 24.00)
+
+	sellOrder := NewOrder(ASK, 20)
+	matches := orderbook.PlaceMarketOrder(sellOrder)
+	assert(t, len(matches), 4)
+	assert(t, len(orderbook.asks), 0)
+	assert(t, len(orderbook.bids), 1)
+	assert(t, orderbook.BidsTotalVolume(), 4.0)
+
+	fmt.Println(matches)
+
+}
