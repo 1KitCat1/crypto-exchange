@@ -177,6 +177,10 @@ func (orderbook *Orderbook) PlaceMarketOrder(order *Order) []Match {
 		for _, limit := range orderbook.Asks() {
 			limitMatches := limit.Fill(order)
 			matches = append(matches, limitMatches...)
+
+			if len(limit.Orders) == 0 {
+				orderbook.clearLimit(false, limit)
+			}
 		}
 	} else {
 		if order.Size > orderbook.BidsTotalVolume() {
@@ -185,6 +189,10 @@ func (orderbook *Orderbook) PlaceMarketOrder(order *Order) []Match {
 		for _, limit := range orderbook.Bids() {
 			limitMatches := limit.Fill(order)
 			matches = append(matches, limitMatches...)
+
+			if len(limit.Orders) == 0 {
+				orderbook.clearLimit(true, limit)
+			}
 		}
 	}
 
@@ -222,6 +230,27 @@ func (orderbook *Orderbook) Asks() []*Limit {
 func (orderbook *Orderbook) Bids() []*Limit {
 	sort.Sort(ByBestBid{orderbook.bids})
 	return orderbook.bids
+}
+
+func (orderbook *Orderbook) clearLimit(is_bid bool, limit *Limit) {
+	if is_bid {
+		delete(orderbook.BidLimits, limit.Price)
+		for i := 0; i < len(orderbook.bids); i++ {
+			if orderbook.bids[i] == limit {
+				orderbook.bids[i] = orderbook.bids[len(orderbook.bids)-1]
+				orderbook.bids = orderbook.bids[:len(orderbook.bids)-1]
+			}
+		}
+	} else {
+		delete(orderbook.AskLimits, limit.Price)
+		for i := 0; i < len(orderbook.asks); i++ {
+			if orderbook.asks[i] == limit {
+				orderbook.asks[i] = orderbook.asks[len(orderbook.asks)-1]
+				orderbook.asks = orderbook.asks[:len(orderbook.asks)-1]
+			}
+		}
+	}
+
 }
 
 func (orderbook *Orderbook) BidsTotalVolume() float64 {

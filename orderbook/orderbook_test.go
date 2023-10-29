@@ -86,7 +86,7 @@ func TestPlaceMarketOrderMultipleMatches(t *testing.T) {
 	matches := orderbook.PlaceMarketOrder(sellOrder)
 	assert(t, len(matches), 3)
 	assert(t, len(orderbook.asks), 0)
-	// assert(t, len(orderbook.bids), 1)
+	assert(t, len(orderbook.bids), 1)
 	assert(t, orderbook.BidsTotalVolume(), 7.0)
 
 	fmt.Println(matches)
