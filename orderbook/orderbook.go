@@ -250,7 +250,14 @@ func (orderbook *Orderbook) clearLimit(is_bid bool, limit *Limit) {
 			}
 		}
 	}
+}
 
+func (orderbook *Orderbook) CancelOrder(order *Order) {
+	limit := order.Limit
+	limit.DeleteOrder(order)
+	if len(limit.Orders) == 0 {
+		orderbook.clearLimit(order.Bid, limit)
+	}
 }
 
 func (orderbook *Orderbook) BidsTotalVolume() float64 {
