@@ -4,6 +4,7 @@ import (
 	"crypto-exchange/orderbook"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
@@ -13,7 +14,7 @@ func main() {
 
 	exchange := NewExchange()
 
-	e.GET("/book/", exchange.handleGetBook)
+	e.GET("/book", exchange.handleGetBook)
 	e.POST("/order", exchange.handlePlaceOrder)
 
 	e.Start(":3000")
@@ -68,6 +69,54 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 	return context.JSON(200, map[string]any{"msg": "Order placed"})
 }
 
-func (exchange *Exchange) handleGetBook(context echo.Context) error {
+type Order struct {
+	Price     float64
+	Size      float64
+	Bid       bool
+	Timestamp int64
+}
 
+type OrderbookData struct {
+	Asks []*Order
+	Bids []*Order
+}
+
+func (exchange *Exchange) handleGetBook(context echo.Context) error {
+	market := Market(context.Param("market"))
+	ob, ok := exchange.orderbooks[market]
+
+	if !ok {
+		return context.JSON(http.StatusBadRequest, map[string]any{"msg": "market not found"})
+	}
+
+	orderbookData := OrderbookData{
+		Asks: []*Order{},
+		Bids: []*Order{},
+	}
+
+	for _, limit := range ob.Asks() {
+		for _, order := range limit.Orders {
+			order := Order{
+				Price:     order.Limit.Price,
+				Size:      order.Size,
+				Bid:       order.Bid,
+				Timestamp: order.Timestamp,
+			}
+			orderbookData.Asks = append(orderbookData.Asks, &order)
+		}
+	}
+
+	for _, limit := range ob.Bids() {
+		for _, order := range limit.Orders {
+			order := Order{
+				Price:     order.Limit.Price,
+				Size:      order.Size,
+				Bid:       order.Bid,
+				Timestamp: order.Timestamp,
+			}
+			orderbookData.Bids = append(orderbookData.Bids, &order)
+		}
+	}
+
+	return context.JSON(http.StatusOK, orderbookData)
 }
