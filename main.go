@@ -34,16 +34,19 @@ type Exchange struct {
 }
 
 func NewExchange() *Exchange {
+	orderbooks := make(map[Market]*orderbook.Orderbook)
+	orderbooks[MarketETH] = orderbook.NewOrderbook()
+
 	return &Exchange{
-		orderbooks: make(map[Market]*orderbook.Orderbook),
+		orderbooks: orderbooks,
 	}
 }
 
-type OrderType bool
+type OrderType string
 
 const (
-	MarketOrder OrderType = true
-	LimitOrder  OrderType = false
+	MarketOrder OrderType = "MARKET"
+	LimitOrder  OrderType = "LIMIT"
 )
 
 type PlaceOrderRequest struct {
@@ -60,11 +63,14 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 	if err := json.NewDecoder(context.Request().Body).Decode(&placeOrderRequest); err != nil {
 		return err
 	}
+	// fmt.Println(placeOrderRequest)
 
 	market := Market(placeOrderRequest.Market)
 	ob := exchange.orderbooks[market]
 	order := orderbook.NewOrder(placeOrderRequest.Bid, placeOrderRequest.Size)
-	ob.PlaceLimitOrder(order.Limit.Price, order)
+	// fmt.Println(ob, order)
+
+	ob.PlaceLimitOrder(placeOrderRequest.Price, order)
 
 	return context.JSON(200, map[string]any{"msg": "Order placed"})
 }
