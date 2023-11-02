@@ -14,7 +14,7 @@ func main() {
 
 	exchange := NewExchange()
 
-	e.GET("/book", exchange.handleGetBook)
+	e.GET("/book/:market", exchange.handleGetBook)
 	e.POST("/order", exchange.handlePlaceOrder)
 
 	e.Start(":3000")
@@ -63,16 +63,22 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 	if err := json.NewDecoder(context.Request().Body).Decode(&placeOrderRequest); err != nil {
 		return err
 	}
-	// fmt.Println(placeOrderRequest)
 
 	market := Market(placeOrderRequest.Market)
 	ob := exchange.orderbooks[market]
 	order := orderbook.NewOrder(placeOrderRequest.Bid, placeOrderRequest.Size)
-	// fmt.Println(ob, order)
 
-	ob.PlaceLimitOrder(placeOrderRequest.Price, order)
+	if placeOrderRequest.Type == LimitOrder {
+		ob.PlaceLimitOrder(placeOrderRequest.Price, order)
+		return context.JSON(200, map[string]any{"msg": "Limit order placed"})
+	} else {
+		matches := ob.PlaceMarketOrder(order)
+		return context.JSON(200, map[string]any{
+			"msg":     "Market order has been executed",
+			"matches": len(matches),
+		})
+	}
 
-	return context.JSON(200, map[string]any{"msg": "Order placed"})
 }
 
 type Order struct {
@@ -83,8 +89,10 @@ type Order struct {
 }
 
 type OrderbookData struct {
-	Asks []*Order
-	Bids []*Order
+	TotalBidVolume float64
+	TotalAskVolume float64
+	Asks           []*Order
+	Bids           []*Order
 }
 
 func (exchange *Exchange) handleGetBook(context echo.Context) error {
