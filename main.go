@@ -89,10 +89,10 @@ type Order struct {
 }
 
 type OrderbookData struct {
-	TotalBidVolume float64
-	TotalAskVolume float64
-	Asks           []*Order
-	Bids           []*Order
+	BidsTotalVolume float64
+	AsksTotalVolume float64
+	Asks            []*Order
+	Bids            []*Order
 }
 
 func (exchange *Exchange) handleGetBook(context echo.Context) error {
@@ -104,8 +104,10 @@ func (exchange *Exchange) handleGetBook(context echo.Context) error {
 	}
 
 	orderbookData := OrderbookData{
-		Asks: []*Order{},
-		Bids: []*Order{},
+		BidsTotalVolume: ob.BidsTotalVolume(),
+		AsksTotalVolume: ob.AsksTotalVolume(),
+		Asks:            []*Order{},
+		Bids:            []*Order{},
 	}
 
 	for _, limit := range ob.Asks() {
