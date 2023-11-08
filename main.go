@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -16,7 +17,7 @@ func main() {
 
 	e.GET("/book/:market", exchange.handleGetBook)
 	e.POST("/order", exchange.handlePlaceOrder)
-
+	e.DELETE("/order/:id", exchange.handleCancelOrder)
 	e.Start(":3000")
 
 	var _ = orderbook.Limit{}
@@ -31,14 +32,17 @@ const (
 
 type Exchange struct {
 	orderbooks map[Market]*orderbook.Orderbook
+	orders     map[int64]*orderbook.Order
 }
 
 func NewExchange() *Exchange {
 	orderbooks := make(map[Market]*orderbook.Orderbook)
 	orderbooks[MarketETH] = orderbook.NewOrderbook()
+	orders := make(map[int64]*orderbook.Order)
 
 	return &Exchange{
 		orderbooks: orderbooks,
+		orders:     orders,
 	}
 }
 
@@ -70,6 +74,7 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 
 	if placeOrderRequest.Type == LimitOrder {
 		ob.PlaceLimitOrder(placeOrderRequest.Price, order)
+		exchange.orders[order.ID] = order
 		return context.JSON(200, map[string]any{"msg": "Limit order placed"})
 	} else {
 		matches := ob.PlaceMarketOrder(order)
@@ -78,7 +83,18 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 			"matches": len(matches),
 		})
 	}
+}
 
+func (exchange *Exchange) handleCancelOrder(context echo.Context) error {
+	orderIdStr := context.Param("id")
+	orderId, err := strconv.ParseInt(orderIdStr, 10, 64)
+	if err != nil {
+		panic("Unable to parse order identifier")
+	}
+	order := exchange.orders[orderId]
+	orderbook := exchange.orderbooks[MarketETH]
+	orderbook.CancelOrder(order)
+	return nil
 }
 
 type Order struct {
