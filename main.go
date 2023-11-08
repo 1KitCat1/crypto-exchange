@@ -82,6 +82,7 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 }
 
 type Order struct {
+	ID        int64
 	Price     float64
 	Size      float64
 	Bid       bool
@@ -113,6 +114,7 @@ func (exchange *Exchange) handleGetBook(context echo.Context) error {
 	for _, limit := range ob.Asks() {
 		for _, order := range limit.Orders {
 			order := Order{
+				ID:        order.ID,
 				Price:     order.Limit.Price,
 				Size:      order.Size,
 				Bid:       order.Bid,
@@ -125,6 +127,7 @@ func (exchange *Exchange) handleGetBook(context echo.Context) error {
 	for _, limit := range ob.Bids() {
 		for _, order := range limit.Orders {
 			order := Order{
+				ID:        order.ID,
 				Price:     order.Limit.Price,
 				Size:      order.Size,
 				Bid:       order.Bid,

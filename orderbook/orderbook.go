@@ -2,6 +2,7 @@ package orderbook
 
 import (
 	"fmt"
+	"math/rand"
 	"sort"
 	"time"
 )
@@ -34,6 +35,7 @@ func (order *Order) String() string {
 
 func NewOrder(is_bid bool, size float64) *Order {
 	return &Order{
+		ID:        rand.Int63n(int64(1) << 62),
 		Size:      size,
 		Bid:       is_bid,
 		Timestamp: time.Now().UnixNano(),
