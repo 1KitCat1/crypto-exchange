@@ -32,17 +32,14 @@ const (
 
 type Exchange struct {
 	orderbooks map[Market]*orderbook.Orderbook
-	orders     map[int64]*orderbook.Order
 }
 
 func NewExchange() *Exchange {
 	orderbooks := make(map[Market]*orderbook.Orderbook)
 	orderbooks[MarketETH] = orderbook.NewOrderbook()
-	orders := make(map[int64]*orderbook.Order)
 
 	return &Exchange{
 		orderbooks: orderbooks,
-		orders:     orders,
 	}
 }
 
@@ -74,7 +71,6 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 
 	if placeOrderRequest.Type == LimitOrder {
 		ob.PlaceLimitOrder(placeOrderRequest.Price, order)
-		exchange.orders[order.ID] = order
 		return context.JSON(200, map[string]any{"msg": "Limit order placed"})
 	} else {
 		matches := ob.PlaceMarketOrder(order)
@@ -91,13 +87,15 @@ func (exchange *Exchange) handleCancelOrder(context echo.Context) error {
 	if err != nil {
 		panic("Unable to parse order identifier")
 	}
-	order := exchange.orders[orderId]
 	orderbook := exchange.orderbooks[MarketETH]
+	order := orderbook.Orders[orderId]
 	orderbook.CancelOrder(order)
-	return nil
+	return context.JSON(200, map[string]any{
+		"msg": "Order has been canceled",
+	})
 }
 
-type Order struct {
+type OrderView struct {
 	ID        int64
 	Price     float64
 	Size      float64
@@ -108,8 +106,8 @@ type Order struct {
 type OrderbookData struct {
 	BidsTotalVolume float64
 	AsksTotalVolume float64
-	Asks            []*Order
-	Bids            []*Order
+	Asks            []*OrderView
+	Bids            []*OrderView
 }
 
 func (exchange *Exchange) handleGetBook(context echo.Context) error {
@@ -123,13 +121,13 @@ func (exchange *Exchange) handleGetBook(context echo.Context) error {
 	orderbookData := OrderbookData{
 		BidsTotalVolume: ob.BidsTotalVolume(),
 		AsksTotalVolume: ob.AsksTotalVolume(),
-		Asks:            []*Order{},
-		Bids:            []*Order{},
+		Asks:            []*OrderView{},
+		Bids:            []*OrderView{},
 	}
 
 	for _, limit := range ob.Asks() {
 		for _, order := range limit.Orders {
-			order := Order{
+			order := OrderView{
 				ID:        order.ID,
 				Price:     order.Limit.Price,
 				Size:      order.Size,
@@ -142,7 +140,7 @@ func (exchange *Exchange) handleGetBook(context echo.Context) error {
 
 	for _, limit := range ob.Bids() {
 		for _, order := range limit.Orders {
-			order := Order{
+			order := OrderView{
 				ID:        order.ID,
 				Price:     order.Limit.Price,
 				Size:      order.Size,
