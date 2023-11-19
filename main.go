@@ -12,7 +12,7 @@ import (
 
 func main() {
 	e := echo.New()
-
+	e.HTTPErrorHandler = httpErrorHandler
 	exchange := NewExchange()
 
 	e.GET("/book/:market", exchange.handleGetBook)
@@ -22,6 +22,10 @@ func main() {
 
 	var _ = orderbook.Limit{}
 	fmt.Println("Check")
+}
+
+func httpErrorHandler(err error, context echo.Context) {
+	fmt.Println(err)
 }
 
 type Market string
