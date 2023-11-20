@@ -47,6 +47,13 @@ func NewExchange() *Exchange {
 	}
 }
 
+type MatchView struct {
+	IDBid int64
+	IDAsk int64
+	Size  float64
+	Price float64
+}
+
 type OrderType string
 
 const (
@@ -78,12 +85,27 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 		return context.JSON(200, map[string]any{"msg": "Limit order placed"})
 	} else {
 		matches := ob.PlaceMarketOrder(order)
+
+		// This is done to avoid recursion
+
+		matchedOrders := make([]*MatchView, len(matches))
+
+		for i := 0; i < len(matchedOrders); i++ {
+			matchedOrders[i] = &MatchView{
+				IDAsk: matches[i].Ask.ID,
+				IDBid: matches[i].Bid.ID,
+				Size:  matches[i].SizeFilled,
+				Price: matches[i].Price,
+			}
+		}
 		return context.JSON(200, map[string]any{
 			"msg":     "Market order has been executed",
-			"matches": len(matches),
+			"matches": matchedOrders,
 		})
 	}
 }
+
+// func (matchView *MatchView)
 
 func (exchange *Exchange) handleCancelOrder(context echo.Context) error {
 	orderIdStr := context.Param("id")
