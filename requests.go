@@ -77,12 +77,7 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 		matchedOrders := make([]*MatchView, len(matches))
 
 		for i := 0; i < len(matchedOrders); i++ {
-			matchedOrders[i] = &MatchView{
-				IDAsk: matches[i].Ask.ID,
-				IDBid: matches[i].Bid.ID,
-				Size:  matches[i].SizeFilled,
-				Price: matches[i].Price,
-			}
+			matchedOrders[i] = getMatchView(&matches[i])
 		}
 		return context.JSON(200, map[string]any{
 			"msg":     "Market order has been executed",
@@ -159,5 +154,14 @@ func getOrderView(order *orderbook.Order) *OrderView {
 		Size:      order.Size,
 		Bid:       order.Bid,
 		Timestamp: order.Timestamp,
+	}
+}
+
+func getMatchView(match *orderbook.Match) *MatchView {
+	return &MatchView{
+		IDAsk: match.Ask.ID,
+		IDBid: match.Bid.ID,
+		Size:  match.SizeFilled,
+		Price: match.Price,
 	}
 }
