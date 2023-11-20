@@ -16,10 +16,6 @@ func httpErrorHandler(err error, context echo.Context) {
 
 type Market string
 
-const (
-	MarketETH Market = "ETH"
-)
-
 type Exchange struct {
 	orderbooks map[Market]*orderbook.Orderbook
 }
@@ -41,11 +37,6 @@ type MatchView struct {
 }
 
 type OrderType string
-
-const (
-	MarketOrder OrderType = "MARKET"
-	LimitOrder  OrderType = "LIMIT"
-)
 
 type PlaceOrderRequest struct {
 	Type   OrderType // limit / market
@@ -73,7 +64,6 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 		matches := ob.PlaceMarketOrder(order)
 
 		// This is done to avoid recursion
-
 		matchedOrders := make([]*MatchView, len(matches))
 
 		for i := 0; i < len(matchedOrders); i++ {
@@ -85,8 +75,6 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 		})
 	}
 }
-
-// func (matchView *MatchView)
 
 func (exchange *Exchange) handleCancelOrder(context echo.Context) error {
 	orderIdStr := context.Param("id")
