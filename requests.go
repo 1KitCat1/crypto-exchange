@@ -63,6 +63,13 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 	} else {
 		matches := ob.PlaceMarketOrder(order)
 
+		if matches == nil {
+			return context.JSON(http.StatusConflict, map[string]any{
+				"msg":    "Orderbook cannot fullfill requested marked order",
+				"reason": "Not enough volume",
+			})
+		}
+
 		// This is done to avoid recursion
 		matchedOrders := make([]*MatchView, len(matches))
 

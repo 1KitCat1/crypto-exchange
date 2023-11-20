@@ -176,7 +176,7 @@ func (orderbook *Orderbook) PlaceMarketOrder(order *Order) []Match {
 
 	if order.Bid {
 		if order.Size > orderbook.AsksTotalVolume() {
-			panic("Not enough volume in the orderbook")
+			return nil
 		}
 		for _, limit := range orderbook.Asks() {
 			limitMatches := limit.Fill(order)
@@ -188,7 +188,7 @@ func (orderbook *Orderbook) PlaceMarketOrder(order *Order) []Match {
 		}
 	} else {
 		if order.Size > orderbook.BidsTotalVolume() {
-			panic("Not enough volume in the orderbook")
+			return nil
 		}
 		for _, limit := range orderbook.Bids() {
 			limitMatches := limit.Fill(order)
