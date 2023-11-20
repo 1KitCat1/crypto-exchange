@@ -142,21 +142,18 @@ func (exchange *Exchange) handleGetBook(context echo.Context) error {
 	return context.JSON(http.StatusOK, orderbookData)
 }
 
-func getOrderView(order *orderbook.Order) *OrderView {
-	return &OrderView{
-		ID:        order.ID,
-		Price:     order.Limit.Price,
-		Size:      order.Size,
-		Bid:       order.Bid,
-		Timestamp: order.Timestamp,
-	}
-}
+func (exchange *Exchange) handleGetVolume(context echo.Context) error {
+	market := Market(context.Param("market"))
+	ob, ok := exchange.orderbooks[market]
 
-func getMatchView(match *orderbook.Match) *MatchView {
-	return &MatchView{
-		IDAsk: match.Ask.ID,
-		IDBid: match.Bid.ID,
-		Size:  match.SizeFilled,
-		Price: match.Price,
+	if !ok {
+		return context.JSON(http.StatusBadRequest, map[string]any{
+			"msg": "Unable to find market with the provided identifier",
+		})
 	}
+
+	return context.JSON(http.StatusOK, map[string]any{
+		"Bid": ob.BidsTotalVolume(),
+		"Ask": ob.AsksTotalVolume(),
+	})
 }

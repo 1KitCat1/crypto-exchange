@@ -13,6 +13,7 @@ func main() {
 	exchange := NewExchange()
 
 	e.GET("/book/:market", exchange.handleGetBook)
+	e.GET("/book/volume/:market", exchange.handleGetVolume)
 	e.POST("/order", exchange.handlePlaceOrder)
 	e.DELETE("/order/:id", exchange.handleCancelOrder)
 	e.Start(":3000")
