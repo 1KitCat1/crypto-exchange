@@ -20,7 +20,6 @@ type Exchange struct {
 
 func NewExchange() *Exchange {
 	orderbooks := make(map[orderbook.Market]*orderbook.Orderbook)
-	orderbooks[MarketETH] = orderbook.NewOrderbook()
 
 	for _, market := range SUPPORTED_MARKETS {
 		orderbooks[market] = orderbook.NewOrderbook()
@@ -29,13 +28,6 @@ func NewExchange() *Exchange {
 	return &Exchange{
 		orderbooks: orderbooks,
 	}
-}
-
-type MatchView struct {
-	IDBid int64
-	IDAsk int64
-	Size  float64
-	Price float64
 }
 
 type OrderType string
@@ -97,21 +89,6 @@ func (exchange *Exchange) handleCancelOrder(context echo.Context) error {
 	return context.JSON(200, map[string]any{
 		"msg": "Order has been canceled",
 	})
-}
-
-type OrderView struct {
-	ID        int64
-	Price     float64
-	Size      float64
-	Bid       bool
-	Timestamp int64
-}
-
-type OrderbookData struct {
-	BidsTotalVolume float64
-	AsksTotalVolume float64
-	Asks            []*OrderView
-	Bids            []*OrderView
 }
 
 func (exchange *Exchange) handleGetBook(context echo.Context) error {

@@ -2,6 +2,28 @@ package main
 
 import "crypto-exchange/orderbook"
 
+type OrderbookData struct {
+	BidsTotalVolume float64
+	AsksTotalVolume float64
+	Asks            []*OrderView
+	Bids            []*OrderView
+}
+
+type OrderView struct {
+	ID        int64
+	Price     float64
+	Size      float64
+	Bid       bool
+	Timestamp int64
+}
+
+type MatchView struct {
+	IDBid int64
+	IDAsk int64
+	Size  float64
+	Price float64
+}
+
 func getOrderView(order *orderbook.Order) *OrderView {
 	return &OrderView{
 		ID:        order.ID,
