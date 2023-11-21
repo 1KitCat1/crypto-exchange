@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+type Market string
+
 type Match struct {
 	Ask        *Order
 	Bid        *Order
@@ -17,6 +19,7 @@ type Match struct {
 type Order struct {
 	ID        int64
 	UserID    int64
+	Market    Market
 	Size      float64
 	Bid       bool // bid or ask
 	Limit     *Limit
@@ -33,10 +36,11 @@ func (order *Order) String() string {
 	return fmt.Sprintf("[sizeL %.2f]", order.Size)
 }
 
-func NewOrder(is_bid bool, size float64) *Order {
+func NewOrder(is_bid bool, size float64, market Market) *Order {
 	return &Order{
 		ID:        rand.Int63n(int64(1) << 62),
 		Size:      size,
+		Market:    market,
 		Bid:       is_bid,
 		Timestamp: time.Now().UnixNano(),
 	}

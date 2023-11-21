@@ -14,15 +14,17 @@ func httpErrorHandler(err error, context echo.Context) {
 	fmt.Println(err)
 }
 
-type Market string
-
 type Exchange struct {
-	orderbooks map[Market]*orderbook.Orderbook
+	orderbooks map[orderbook.Market]*orderbook.Orderbook
 }
 
 func NewExchange() *Exchange {
-	orderbooks := make(map[Market]*orderbook.Orderbook)
+	orderbooks := make(map[orderbook.Market]*orderbook.Orderbook)
 	orderbooks[MarketETH] = orderbook.NewOrderbook()
+
+	for _, market := range SUPPORTED_MARKETS {
+		orderbooks[market] = orderbook.NewOrderbook()
+	}
 
 	return &Exchange{
 		orderbooks: orderbooks,
@@ -43,7 +45,7 @@ type PlaceOrderRequest struct {
 	Bid    bool      // bid / ask
 	Size   float64
 	Price  float64
-	Market Market
+	Market orderbook.Market
 }
 
 func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
@@ -53,9 +55,9 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 		return err
 	}
 
-	market := Market(placeOrderRequest.Market)
+	market := orderbook.Market(placeOrderRequest.Market)
 	ob := exchange.orderbooks[market]
-	order := orderbook.NewOrder(placeOrderRequest.Bid, placeOrderRequest.Size)
+	order := orderbook.NewOrder(placeOrderRequest.Bid, placeOrderRequest.Size, placeOrderRequest.Market)
 
 	if placeOrderRequest.Type == LimitOrder {
 		ob.PlaceLimitOrder(placeOrderRequest.Price, order)
@@ -113,7 +115,7 @@ type OrderbookData struct {
 }
 
 func (exchange *Exchange) handleGetBook(context echo.Context) error {
-	market := Market(context.Param("market"))
+	market := orderbook.Market(context.Param("market"))
 	ob, ok := exchange.orderbooks[market]
 
 	if !ok {
@@ -143,7 +145,7 @@ func (exchange *Exchange) handleGetBook(context echo.Context) error {
 }
 
 func (exchange *Exchange) handleGetVolume(context echo.Context) error {
-	market := Market(context.Param("market"))
+	market := orderbook.Market(context.Param("market"))
 	ob, ok := exchange.orderbooks[market]
 
 	if !ok {
