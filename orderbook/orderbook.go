@@ -36,9 +36,10 @@ func (order *Order) String() string {
 	return fmt.Sprintf("[sizeL %.2f]", order.Size)
 }
 
-func NewOrder(is_bid bool, size float64, market Market) *Order {
+func NewOrder(is_bid bool, size float64, market Market, userID int64) *Order {
 	return &Order{
 		ID:        rand.Int63n(int64(1) << 62),
+		UserID:    userID,
 		Size:      size,
 		Market:    market,
 		Bid:       is_bid,

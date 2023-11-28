@@ -13,6 +13,7 @@ type OrderView struct {
 	ID        int64
 	Price     float64
 	Size      float64
+	UserID    int64
 	Bid       bool
 	Timestamp int64
 }
@@ -27,6 +28,7 @@ type MatchView struct {
 func getOrderView(order *orderbook.Order) *OrderView {
 	return &OrderView{
 		ID:        order.ID,
+		UserID:    order.UserID,
 		Price:     order.Limit.Price,
 		Size:      order.Size,
 		Bid:       order.Bid,

@@ -37,6 +37,7 @@ type PlaceOrderRequest struct {
 	Bid    bool      // bid / ask
 	Size   float64
 	Price  float64
+	UserID int64
 	Market orderbook.Market
 }
 
@@ -49,7 +50,7 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 
 	market := orderbook.Market(placeOrderRequest.Market)
 	ob := exchange.orderbooks[market]
-	order := orderbook.NewOrder(placeOrderRequest.Bid, placeOrderRequest.Size, placeOrderRequest.Market)
+	order := orderbook.NewOrder(placeOrderRequest.Bid, placeOrderRequest.Size, placeOrderRequest.Market, placeOrderRequest.UserID)
 
 	if placeOrderRequest.Type == LimitOrder {
 		ob.PlaceLimitOrder(placeOrderRequest.Price, order)
