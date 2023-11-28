@@ -14,22 +14,6 @@ func httpErrorHandler(err error, context echo.Context) {
 	fmt.Println(err)
 }
 
-type Exchange struct {
-	orderbooks map[orderbook.Market]*orderbook.Orderbook
-}
-
-func NewExchange() *Exchange {
-	orderbooks := make(map[orderbook.Market]*orderbook.Orderbook)
-
-	for _, market := range SUPPORTED_MARKETS {
-		orderbooks[market] = orderbook.NewOrderbook()
-	}
-
-	return &Exchange{
-		orderbooks: orderbooks,
-	}
-}
-
 type OrderType string
 
 type PlaceOrderRequest struct {
@@ -76,6 +60,10 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 			"matches": matchedOrders,
 		})
 	}
+}
+
+func (exchange *Exchange) handleGetOrder(context echo.Context) error {
+	return nil
 }
 
 func (exchange *Exchange) handleCancelOrder(context echo.Context) error {
