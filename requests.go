@@ -35,6 +35,7 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 	market := orderbook.Market(placeOrderRequest.Market)
 	ob := exchange.orderbooks[market]
 	order := orderbook.NewOrder(placeOrderRequest.Bid, placeOrderRequest.Size, placeOrderRequest.Market, placeOrderRequest.UserID)
+	exchange.orders[order.ID] = order
 
 	if placeOrderRequest.Type == LimitOrder {
 		ob.PlaceLimitOrder(placeOrderRequest.Price, order)
@@ -63,7 +64,21 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 }
 
 func (exchange *Exchange) handleGetOrder(context echo.Context) error {
-	return nil
+	orderIdStr := context.Param("orderId")
+	orderId, err := strconv.ParseInt(orderIdStr, 10, 64)
+
+	if err != nil {
+		panic("Unable to parse order identfier") // TODO: replace with invalid request code
+	}
+
+	order, ok := exchange.orders[orderId]
+
+	if ok {
+		orderView := getOrderView(order)
+		return context.JSON(http.StatusOK, orderView)
+	} else {
+		return context.JSON(http.StatusBadRequest, map[string]any{"msg": "Order is not in the exchange memory"})
+	}
 }
 
 func (exchange *Exchange) handleCancelOrder(context echo.Context) error {

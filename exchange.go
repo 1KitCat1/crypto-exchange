@@ -4,6 +4,7 @@ import "crypto-exchange/orderbook"
 
 type Exchange struct {
 	orderbooks map[orderbook.Market]*orderbook.Orderbook
+	orders     map[int64]*orderbook.Order
 }
 
 func NewExchange() *Exchange {
@@ -15,5 +16,6 @@ func NewExchange() *Exchange {
 
 	return &Exchange{
 		orderbooks: orderbooks,
+		orders:     make(map[int64]*orderbook.Order),
 	}
 }

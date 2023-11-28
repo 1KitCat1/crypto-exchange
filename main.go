@@ -14,7 +14,10 @@ func main() {
 
 	e.GET("/book/:market", exchange.handleGetBook)
 	e.GET("/book/volume/:market", exchange.handleGetVolume)
+	e.GET("/order/:orderId", exchange.handleGetOrder)
+
 	e.POST("/order", exchange.handlePlaceOrder)
+
 	e.DELETE("/order/:id", exchange.handleCancelOrder)
 	e.Start(":3000")
 
