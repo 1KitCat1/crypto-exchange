@@ -37,6 +37,11 @@ func (exchange *Exchange) handlePlaceOrder(context echo.Context) error {
 	order := orderbook.NewOrder(placeOrderRequest.Bid, placeOrderRequest.Size, placeOrderRequest.Market, placeOrderRequest.UserID)
 	exchange.orders[order.ID] = order
 
+	if _, exists := exchange.userOrders[order.UserID]; !exists {
+		exchange.userOrders[order.UserID] = make(map[int64]struct{})
+	}
+	exchange.userOrders[order.UserID][order.ID] = struct{}{}
+
 	if placeOrderRequest.Type == LimitOrder {
 		ob.PlaceLimitOrder(placeOrderRequest.Price, order)
 		return context.JSON(200, map[string]any{"msg": "Limit order placed"})
@@ -79,6 +84,19 @@ func (exchange *Exchange) handleGetOrder(context echo.Context) error {
 	} else {
 		return context.JSON(http.StatusBadRequest, map[string]any{"msg": "Order is not in the exchange memory"})
 	}
+}
+
+func (exchange *Exchange) handleGetUserOrders(context echo.Context) error {
+	userIdStr := context.Param("userId")
+	userId, err := strconv.ParseInt(userIdStr, 10, 64)
+
+	if err != nil {
+		return context.JSON(http.StatusBadRequest, map[string]any{"msg": "Unable to parse userID"})
+	}
+
+	orderIds := exchange.userOrders[userId]
+
+	return context.JSON(http.StatusOK, orderIds)
 }
 
 func (exchange *Exchange) handleCancelOrder(context echo.Context) error {
