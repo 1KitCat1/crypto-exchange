@@ -2,6 +2,7 @@ package orderbook
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"sort"
 	"time"
@@ -125,29 +126,18 @@ func (limit *Limit) Fill(order *Order) []Match {
 }
 
 func (limit *Limit) fillOrder(firstOrder, secondOrder *Order) Match {
-	var (
-		bid    *Order
-		ask    *Order
-		filled float64
-	)
+	bid := firstOrder
+	ask := secondOrder
 
-	if firstOrder.Bid {
-		bid = firstOrder
-		ask = secondOrder
-	} else {
+	if secondOrder.Bid {
 		bid = secondOrder
 		ask = firstOrder
 	}
 
-	if firstOrder.Size >= secondOrder.Size {
-		firstOrder.Size -= secondOrder.Size
-		filled = secondOrder.Size
-		secondOrder.Size = 0
-	} else {
-		secondOrder.Size -= firstOrder.Size
-		filled = firstOrder.Size
-		firstOrder.Size = 0
-	}
+	filled := math.Min(bid.Size, ask.Size)
+
+	bid.Size -= filled
+	ask.Size -= filled
 
 	return Match{
 		Bid:        bid,
