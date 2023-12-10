@@ -154,15 +154,20 @@ type Orderbook struct {
 	AskLimits map[float64]*Limit
 	BidLimits map[float64]*Limit
 	Orders    map[int64]*Order
+
+	AskTotalVolume float64
+	BidTotalVolume float64
 }
 
 func NewOrderbook() *Orderbook {
 	return &Orderbook{
-		asks:      []*Limit{},
-		bids:      []*Limit{},
-		AskLimits: make(map[float64]*Limit),
-		BidLimits: make(map[float64]*Limit),
-		Orders:    make(map[int64]*Order),
+		asks:           []*Limit{},
+		bids:           []*Limit{},
+		AskLimits:      make(map[float64]*Limit),
+		BidLimits:      make(map[float64]*Limit),
+		Orders:         make(map[int64]*Order),
+		AskTotalVolume: 0.0,
+		BidTotalVolume: 0.0,
 	}
 }
 
@@ -170,8 +175,10 @@ func (orderbook *Orderbook) PlaceMarketOrder(order *Order) []Match {
 	matches := []Match{}
 
 	if order.Bid {
-		if order.Size > orderbook.AsksTotalVolume() {
+		if order.Size > orderbook.AskTotalVolume {
 			return nil
+		} else {
+			orderbook.AskTotalVolume -= order.Size
 		}
 		for _, limit := range orderbook.Asks() {
 			limitMatches := limit.Fill(order)
@@ -182,8 +189,10 @@ func (orderbook *Orderbook) PlaceMarketOrder(order *Order) []Match {
 			}
 		}
 	} else {
-		if order.Size > orderbook.BidsTotalVolume() {
+		if order.Size > orderbook.BidTotalVolume {
 			return nil
+		} else {
+			orderbook.BidTotalVolume -= order.Size
 		}
 		for _, limit := range orderbook.Bids() {
 			limitMatches := limit.Fill(order)
@@ -203,8 +212,10 @@ func (orderbook *Orderbook) PlaceLimitOrder(price float64, order *Order) {
 
 	if order.Bid {
 		limit = orderbook.BidLimits[price]
+		orderbook.BidTotalVolume += order.Size
 	} else {
 		limit = orderbook.AskLimits[price]
+		orderbook.AskTotalVolume += order.Size
 	}
 
 	if limit == nil {
@@ -258,24 +269,18 @@ func (orderbook *Orderbook) CancelOrder(order *Order) {
 		orderbook.clearLimit(order.Bid, limit)
 	}
 	delete(orderbook.Orders, order.ID)
+
+	if order.Bid {
+		orderbook.BidTotalVolume -= order.Size
+	} else {
+		orderbook.AskTotalVolume -= order.Size
+	}
 }
 
 func (orderbook *Orderbook) BidsTotalVolume() float64 {
-	totalVolume := 0.0
-	// TODO: optimize
-	for i := 0; i < len(orderbook.bids); i++ {
-		totalVolume += orderbook.bids[i].Volume
-	}
-
-	return totalVolume
+	return orderbook.BidTotalVolume
 }
 
 func (orderbook *Orderbook) AsksTotalVolume() float64 {
-	totalVolume := 0.0
-	// TODO: optimize
-	for i := 0; i < len(orderbook.asks); i++ {
-		totalVolume += orderbook.asks[i].Volume
-	}
-
-	return totalVolume
+	return orderbook.AskTotalVolume
 }
